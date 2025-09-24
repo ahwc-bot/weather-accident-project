@@ -43,3 +43,19 @@ def mock_db():
     cursor = MagicMock()
     conn.cursor.return_value.__enter__.return_value = cursor
     return conn, cursor
+
+
+@pytest.fixture
+def mock_weather_response():
+    """Fake Open-Meteo hourly weather data for one day."""
+    hourly_data = {
+        "time": [f"2024-01-01T{str(h).zfill(2)}:00:00" for h in range(24)],
+        "temperature_2m": [0.1 * h for h in range(24)],
+        "precipitation": [0.0 for _ in range(24)],
+        "snowfall": [0.0 for _ in range(24)],
+        "weathercode": [1 for _ in range(24)],
+        "windspeed_10m": [0.5 for _ in range(24)],
+        "cloudcover": [10 for _ in range(24)],
+        "relative_humidity_2m": [50 for _ in range(24)],
+    }
+    return {"hourly": hourly_data}
