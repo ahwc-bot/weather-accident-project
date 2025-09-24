@@ -15,10 +15,11 @@ wheels/
 .env.*.local
 
 # Airflow
-airflow.db
-airflow.cfg
-unittest.cfg
-logs/
+# Ignore all contents in airflow/
+airflow/*
+# Except dags folder and its contents
+!airflow/dags/
+!airflow/dags/**
 
 # DBT
 profiles.yml
