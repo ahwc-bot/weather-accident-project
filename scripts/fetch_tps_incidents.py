@@ -7,7 +7,7 @@ import psycopg2.extensions
 import requests
 import argparse
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time as dt_time
 from urllib.parse import quote, urlencode
 import pytz
 
@@ -112,15 +112,20 @@ def upsert_raw_incidents(conn, features):
 
             occ_date_utc = None
             if attrs.get("OCC_DATE"):
+                # OCC_DATE is already a UTC timestamp at midnight, or a ms epoch at midnight
                 occ_date_val = attrs["OCC_DATE"]
-                # Robust check: treat as ms if 13+ digits, else seconds
-                if len(str(int(occ_date_val))) >= 13:
-                    occ_dt = datetime.fromtimestamp(occ_date_val / 1000, tz=pytz.UTC)
-                else:
-                    logger.warning(
-                        f"OCC_DATE value {occ_date_val} seems to be in seconds, not milliseconds. Check API."
-                    )
-                    occ_dt = datetime.fromtimestamp(occ_date_val, tz=pytz.UTC)
+                occ_dt = datetime.fromtimestamp(occ_date_val / 1000, tz=pytz.UTC)
+
+                # Add OCC_HOUR if present
+                occ_hour = attrs.get("OCC_HOUR")
+                if occ_hour is not None:
+                    # Convert UTC midnight to Toronto local
+                    occ_local = occ_dt.astimezone(TORONTO_TZ)
+                    # Combine date with OCC_HOUR explicitly
+                    occ_local = TORONTO_TZ.localize(datetime.combine(occ_local.date(), dt_time(int(occ_hour), 0)))
+                    # Convert back to UTC
+                    occ_dt = occ_local.astimezone(pytz.UTC)
+
                 occ_date_utc = occ_dt
 
             objectid = attrs.get("OBJECTID")

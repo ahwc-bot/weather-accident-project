@@ -1,39 +1,43 @@
 import pytest
 from unittest.mock import MagicMock
+from datetime import datetime, timedelta
+import pytz
 
 @pytest.fixture
 def mock_tps_response():
-    """Fake TPS API response with a valid record"""
-    return {
-        "features": [
-            {
-                "attributes": {
-                    "OBJECTID": 1,
-                    "EVENT_UNIQUE_ID": "GO-1",
-                    "OCC_DATE": 1704085200000,
-                    "OCC_MONTH": "January",
-                    "OCC_DOW": "Monday",
-                    "OCC_YEAR": "2024",
-                    "OCC_HOUR": "12",
-                    "DIVISION": "D1",
-                    "FATALITIES": 0,
-                    "INJURY_COLLISIONS": "NO",
-                    "FTR_COLLISIONS": "NO",
-                    "PD_COLLISIONS": "YES",
-                    "HOOD_158": "H1",
-                    "NEIGHBOURHOOD_158": "N1",
-                    "LONG_WGS84": -79.38,
-                    "LAT_WGS84": 43.65,
-                    "AUTOMOBILE": "YES",
-                    "MOTORCYCLE": "NO",
-                    "PASSENGER": "NO",
-                    "BICYCLE": "NO",
-                    "PEDESTRIAN": "NO",
-                },
-                "geometry": {"x": -79.38, "y": 43.65},
-            }
-        ]
-    }
+    """Fake TPS API response with multiple incidents on the same day."""
+    TORONTO_TZ = pytz.timezone("America/Toronto")
+    occ_date_dt = datetime(2024, 1, 1)  # January 1, 2024
+    occ_timestamp_ms = int(TORONTO_TZ.localize(occ_date_dt).timestamp() * 1000)
+
+    features = []
+    # simulate 3 incidents on the same day
+    for i, hour in enumerate([9, 12, 17]):  # OCC_HOUR for each incident
+        features.append({
+            "attributes": {
+                "OBJECTID": i + 1,
+                "EVENT_UNIQUE_ID": f"GO-{i+1}",
+                "OCC_DATE": occ_timestamp_ms,   # same for all incidents
+                "OCC_HOUR": str(hour),
+                "DIVISION": "D1",
+                "FATALITIES": 0,
+                "INJURY_COLLISIONS": "NO",
+                "FTR_COLLISIONS": "NO",
+                "PD_COLLISIONS": "YES",
+                "HOOD_158": "H1",
+                "NEIGHBOURHOOD_158": "N1",
+                "LONG_WGS84": -79.38 + i * 0.01,
+                "LAT_WGS84": 43.65 + i * 0.01,
+                "AUTOMOBILE": "YES",
+                "MOTORCYCLE": "NO",
+                "PASSENGER": "NO",
+                "BICYCLE": "NO",
+                "PEDESTRIAN": "NO",
+            },
+            "geometry": {"x": -79.38 + i * 0.01, "y": 43.65 + i * 0.01},
+        })
+
+    return {"features": features}
 
 
 @pytest.fixture
