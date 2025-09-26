@@ -1,42 +1,65 @@
-# Python-generated files
+# -------------------------
+# Python
+# -------------------------
 __pycache__/
 *.py[oc]
+*.pyo
+*.pyd
+*.egg-info
 build/
 dist/
 wheels/
-*.egg-info
 
 # Virtual environments
-.venv
-
-# Environment variables file
+.venv/
+.venv*/
 .env
 .env.local
 .env.*.local
 
+# -------------------------
 # Airflow
-# Ignore all contents in airflow/
+# -------------------------
+# Ignore everything in airflow/ except DAGs
 airflow/*
-# Except dags folder and its contents
 !airflow/dags/
 !airflow/dags/**
 
-# DBT
-profiles.yml
-dbt_modules/
-dbt_packages/
-target/
+# Airflow logs
+airflow/logs/
 
-# Data
+# -------------------------
+# dbt
+# -------------------------
+# Local dbt config/profile
+profiles.yml
+
+# dbt generated artifacts
+dbt/target/
+dbt/dbt_modules/
+dbt/dbt_packages/
+dbt/logs/
+
+# -------------------------
+# Data files
+# -------------------------
 data/export/
 data/raw/
 
-# Pytest
+# -------------------------
+# Testing
+# -------------------------
 .pytest_cache/
+.coverage
+htmlcov/
 
-# Jupyter Notebook checkpoints
+# -------------------------
+# Jupyter
+# -------------------------
 .ipynb_checkpoints/
 
-# OS generated files
+# -------------------------
+# OS-generated
+# -------------------------
 .DS_Store
 Thumbs.db
