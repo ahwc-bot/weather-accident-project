@@ -111,9 +111,9 @@ def upsert_raw_incidents(conn, features):
             geom = f.get("geometry", {})
 
             occ_date_utc = None
-            if attrs.get("OCC_DATE"):
-                # OCC_DATE is already a UTC timestamp at midnight, or a ms epoch at midnight
-                occ_date_val = attrs["OCC_DATE"]
+            # OCC_DATE is already a UTC timestamp at midnight, or a ms epoch at midnight
+            occ_date_val = attrs.get("OCC_DATE")
+            if occ_date_val:
                 occ_dt = datetime.fromtimestamp(occ_date_val / 1000, tz=pytz.UTC)
 
                 # Add OCC_HOUR if present
@@ -136,21 +136,27 @@ def upsert_raw_incidents(conn, features):
                 logger.warning(f"OBJECTID={objectid} has invalid/missing coords, saving as NULL")
                 lat, lon = None, None
 
+            # Extract stable unique event identifier
+            event_id = attrs.get("EVENT_UNIQUE_ID")
+            if not event_id:
+                logger.warning(f"Skipping OBJECTID={objectid} because EVENT_UNIQUE_ID is missing")
+                continue
+
             cur.execute(
                 """
-                INSERT INTO raw_incidents (objectid, event_id, raw, occ_date_utc, lat, lon)
+                INSERT INTO raw_incidents (event_id, objectid, raw, occ_date_utc, lat, lon)
                 VALUES (%s, %s, %s::jsonb, %s, %s, %s)
-                ON CONFLICT (objectid)
+                ON CONFLICT (event_id)
                 DO UPDATE SET
-                    event_id = EXCLUDED.event_id,
+                    objectid = EXCLUDED.objectid,
                     raw = EXCLUDED.raw,
                     occ_date_utc = EXCLUDED.occ_date_utc,
                     lat = EXCLUDED.lat,
                     lon = EXCLUDED.lon
                 """,
                 (
+                    event_id,
                     objectid,
-                    attrs.get("ACCNUM"),
                     json.dumps(f),
                     occ_date_utc,
                     lat,

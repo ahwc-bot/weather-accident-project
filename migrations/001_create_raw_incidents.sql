@@ -1,8 +1,8 @@
 -- DDL for storing TPS traffic incidents (raw ingest)
 
 CREATE TABLE IF NOT EXISTS raw_incidents (
-    objectid     INTEGER PRIMARY KEY,             -- TPS unique record ID
-    event_id     TEXT,                            -- e.g. "GO-xxxx"
+    event_id     TEXT PRIMARY KEY,                -- e.g. "GO-xxxx", stable key
+    objectid     INTEGER,                         -- TPS internal record ID
     raw          JSONB,                           -- full TPS payload for audit/fallback
 
     -- Early extracted fields (for partitioning, joining, indexing)

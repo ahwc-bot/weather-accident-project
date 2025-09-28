@@ -20,7 +20,7 @@ def test_upsert_raw_incidents_inserts_expected_rows(mock_tps_response, mock_db):
 def test_upsert_raw_incidents_handles_missing_latlon(mock_db):
     conn, cursor = mock_db
     features = [
-        {"attributes": {"OBJECTID": 99, "ACCNUM": "ACC-002"}, "geometry": {"x": None, "y": None}}
+        {"attributes": {"OBJECTID": 99, "EVENT_UNIQUE_ID":"GO-20240000099", "LAT_WGS84": 0, "LONG_WGS84": 0}, "geometry": {"x": None, "y": None}}
     ]
     rows = fetch_tps_incidents.upsert_raw_incidents(conn, features)
     assert rows == 1
