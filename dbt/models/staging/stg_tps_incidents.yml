@@ -1,0 +1,71 @@
+version: 2
+
+models:
+  - name: stg_tps_incidents
+    description: >
+      Staging model for Toronto Police Service collision incidents.
+      Normalizes JSONB payload into typed columns for downstream use.
+    columns:
+      - name: event_id
+        description: "Primary key from TPS (GO-xxxx)."
+        tests:
+          - not_null
+          - unique
+      - name: objectid
+        description: "TPS internal record ID."
+      - name: event_unique_id
+        description: "Offence Number from TPS payload."
+      - name: occ_date_epoch
+        description: "Raw OCC_DATE in epoch seconds (UTC)."
+      - name: occ_date
+        description: >
+          Original reported occurrence timestamp. Known issue: time portion is unreliable,
+          only the date is typically usable.
+      - name: occ_month
+        description: "Month collision occurred (string label, e.g. 'March')."
+      - name: occ_dow
+        description: "Day of week collision occurred (string label)."
+      - name: occ_year
+        description: "Year collision occurred (int)."
+      - name: occ_hour
+        description: "Hour collision occurred (int)."
+      - name: division
+        description: "Police division where collision occurred."
+      - name: hood_158
+        description: "Neighbourhood identifier (string code, e.g. 'NSA')."
+      - name: neighbourhood_158
+        description: "Neighbourhood name."
+      - name: fatalities
+        description: "Number of persons killed (int)."
+      - name: injury_collisions
+        description: "Collision had associated injury (boolean)."
+      - name: ftr_collisions
+        description: "Collision was Fail to Remain (boolean)."
+      - name: pd_collisions
+        description: "Collision was Property Damage (boolean)."
+      - name: long_wgs84
+        description: "Longitude offset to nearest intersection (numeric)."
+      - name: lat_wgs84
+        description: "Latitude offset to nearest intersection (numeric)."
+      - name: automobile
+        description: "Collision involved a person in an automobile (boolean)."
+      - name: motorcycle
+        description: "Collision involved a motorcyclist (boolean)."
+      - name: passenger
+        description: "Collision involved a passenger (boolean)."
+      - name: bicycle
+        description: "Collision involved a cyclist (boolean)."
+      - name: pedestrian
+        description: "Collision involved a pedestrian (boolean)."
+      - name: geometry_x
+        description: "Raw geometry x from TPS payload (decimal degrees, near-zero in sample)."
+      - name: geometry_y
+        description: "Raw geometry y from TPS payload (decimal degrees, near-zero in sample)."
+      - name: occ_date_utc
+        description: "UTC timestamp carried from raw_incidents."
+      - name: lat
+        description: "Full precision latitude from raw_incidents (numeric)."
+      - name: lon
+        description: "Full precision longitude from raw_incidents (numeric)."
+      - name: inserted_at
+        description: "Record ingestion timestamp."

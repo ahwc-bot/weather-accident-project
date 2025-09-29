@@ -1,0 +1,79 @@
+version: 2
+
+sources:
+  - name: src
+    description: >
+      Source layer for collision incidents and cached weather data.
+    database: weather_accident_db
+    schema: public
+
+    tables:
+      - name: raw_incidents
+        description: >
+          Raw Toronto Police Service (TPS) collision incidents.
+          Stores full JSONB payload plus extracted fields for partitioning and joining.
+        columns:
+          - name: objectid
+            description: "TPS unique record ID (primary key)."
+          - name: event_id
+            description: "Event identifier, e.g., 'GO-xxxx'."
+          - name: raw
+            description: "Full TPS payload as JSONB for audit/fallback."
+          - name: occ_date_utc
+            description: "UTC timestamp from TPS."
+          - name: lat
+            description: "Full precision latitude."
+          - name: lon
+            description: "Full precision longitude."
+          - name: inserted_at
+            description: "Record ingestion timestamp."
+
+        meta:
+          jsonb_fields:
+            EVENT_UNIQUE_ID: "Offence Number"
+            OCC_DATE: "Date Collision Occurred (UTC)"
+            OCC_MONTH: "Month Collision Occurred"
+            OCC_DOW: "Day of Week Collision Occurred"
+            OCC_YEAR: "Year Collision Occurred"
+            OCC_HOUR: "Hour Collision Occurred"
+            DIVISION: "Police Division where Collision Occurred"
+            FATALITIES: "Number of persons killed"
+            INJURY_COLLISIONS: "Indicates if collision had associated injury"
+            FTR_COLLISIONS: "Indicates Fail to Remain"
+            PD_COLLISIONS: "Indicates Property Damage"
+            HOOD_158: "Neighbourhood identifier"
+            NEIGHBOURHOOD_158: "Neighbourhood name"
+            LONG_WGS84: "Longitude (offset to nearest intersection)"
+            LAT_WGS84: "Latitude (offset to nearest intersection)"
+            AUTOMOBILE: "Collision involved a person in an automobile"
+            MOTORCYCLE: "Collision involved a motorcyclist"
+            PASSENGER: "Collision involved a passenger"
+            BICYCLE: "Collision involved a cyclist"
+            PEDESTRIAN: "Collision involved a pedestrian"
+
+      - name: weather_cache
+        description: >
+          Cached hourly weather data (from external API) keyed by location and UTC hour.
+        columns:
+          - name: lat
+            description: "Latitude, rounded (5 decimal places)."
+          - name: lon
+            description: "Longitude, rounded (5 decimal places)."
+          - name: hour_utc
+            description: "Hour timestamp in UTC."
+          - name: date_utc
+            description: "UTC date, maintained by trigger."
+          - name: temperature
+            description: "Air temperature (°C)."
+          - name: precipitation
+            description: "Precipitation (mm)."
+          - name: snowfall
+            description: "Snowfall (cm)."
+          - name: weathercode
+            description: "Weather condition code."
+          - name: windspeed
+            description: "Wind speed (km/h or m/s depending on feed)."
+          - name: cloudcover
+            description: "Cloud cover (%)."
+          - name: humidity
+            description: "Relative humidity (%)."
