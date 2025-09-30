@@ -1,0 +1,74 @@
+version: 2
+
+models:
+  - name: int_enriched_incidents
+    description: >
+      Intermediate model combining Toronto Police Service collision incidents
+      with hourly weather data. Computes collision severity and flags invalid coordinates.
+    columns:
+      - name: event_id
+        description: "Primary key from TPS (GO-xxxx)."
+        tests:
+          - not_null
+          - unique
+      - name: objectid
+        description: "TPS internal record ID."
+      - name: occ_date_utc
+        description: "UTC timestamp of collision occurrence (built from OCC_DATE + OCC_HOUR)."
+      - name: lat
+        description: "Full precision latitude from TPS payload."
+      - name: lon
+        description: "Full precision longitude from TPS payload."
+      - name: lat_r
+        description: "Latitude rounded to 2 decimal places for weather join."
+      - name: lon_r
+        description: "Longitude rounded to 2 decimal places for weather join."
+      - name: invalid_coord_flag
+        description: "Flag indicating whether coordinates are invalid (true = problem)."
+      - name: collision_severity
+        description: >
+          Collision severity hierarchy: Fatality > Injury > Fail to Remain > Property Damage > Unknown.
+      - name: collision_severity_rank
+        description: >
+          Numeric rank for collision severity (1=Fatality, 2=Injury, 3=Fail to Remain, 4=Property Damage, 5=Unknown).
+      - name: occ_date_day
+        description: "Date part of occ_date_utc (YYYY-MM-DD)."
+      - name: is_weekend
+        description: "Flag indicating if the collision occurred on a weekend (Saturday/Sunday)."
+      - name: season
+        description: "Season of the year (Winter, Spring, Summer, Fall) based on occ_date_utc."
+      - name: fatalities
+        description: "Number of persons killed."
+      - name: injury_collisions
+        description: "Collision involved injuries (boolean)."
+      - name: ftr_collisions
+        description: "Collision involved Fail to Remain (boolean)."
+      - name: pd_collisions
+        description: "Collision involved Property Damage (boolean)."
+      - name: automobile
+        description: "Collision involved a person in an automobile (boolean)."
+      - name: motorcycle
+        description: "Collision involved a motorcyclist (boolean)."
+      - name: passenger
+        description: "Collision involved a passenger (boolean)."
+      - name: bicycle
+        description: "Collision involved a cyclist (boolean)."
+      - name: pedestrian
+        description: "Collision involved a pedestrian (boolean)."
+      - name: temperature
+        description: "Air temperature (°C) at the collision hour and location."
+      - name: precipitation
+        description: "Precipitation (mm) at the collision hour and location."
+      - name: snowfall
+        description: "Snowfall (cm) at the collision hour and location."
+      - name: weathercode
+        description: "Raw Open-Meteo weather code at the collision hour and location."
+      - name: windspeed
+        description: "Wind speed (km/h) at the collision hour and location."
+      - name: cloudcover
+        description: "Cloud cover (%) at the collision hour and location."
+      - name: humidity
+        description: "Relative humidity (%) at the collision hour and location."
+      - name: weather_condition
+        description: >
+          Bucketed weather condition derived from weathercode (Clear, Cloudy, Fog, Rain/Drizzle, Rain, Snow, Rain showers, Thunderstorm, Other).
