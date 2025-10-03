@@ -194,8 +194,9 @@ def main():
         elif last_date:
             if last_date.tzinfo is None:
                 last_date = pytz.UTC.localize(last_date)
-            prev_day = last_date.astimezone(TORONTO_TZ).date() - timedelta(days=1)
-            start_local = TORONTO_TZ.localize(datetime.combine(prev_day, datetime.min.time()))
+            # advance to local day of last_date
+            next_day = last_date.astimezone(TORONTO_TZ).date() + timedelta(days=1)
+            start_local = TORONTO_TZ.localize(datetime.combine(next_day, datetime.min.time()))
         else:
             start_local = PROJECT_BASELINE
 
