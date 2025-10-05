@@ -55,8 +55,8 @@ def test_bulk_mode_runs(monkeypatch, mock_db, mock_weather_response):
     monkeypatch.setattr(build_weather_cache.psycopg2, "connect", lambda **_: conn)
     # Patch API call
     monkeypatch.setattr(build_weather_cache, "fetch_with_retry", lambda url: mock_weather_response)
-    # Patch find_missing_triples to return one triple
-    monkeypatch.setattr(build_weather_cache, "find_missing_triples", lambda conn: [(43.61, -79.56, date(2024, 1, 1))])
+    # Patch find_missing_ranges to return one triple
+    monkeypatch.setattr(build_weather_cache, "find_missing_ranges", lambda conn: [(43.61, -79.56, date(2024, 1, 1), date(2024, 1, 1))])
     # Patch logging
     monkeypatch.setattr(build_weather_cache.logger, "info", lambda *a, **kw: None)
     monkeypatch.setattr(build_weather_cache.logger, "warning", lambda *a, **kw: None)

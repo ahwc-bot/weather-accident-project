@@ -7,7 +7,7 @@ import requests
 import argparse
 import logging
 from typing import List, Tuple
-from datetime import datetime, timedelta, date
+from datetime import datetime, date
 
 from scripts.utils.logging_utils import log_run_start, log_run_end
 
@@ -50,15 +50,13 @@ def get_db_conn():
 # ========================
 # Helper: Build API URL
 # ========================
-def build_url(lat: float, lon: float, day: date) -> str:
-    """Build Open-Meteo archive API URL for given day and location (UTC)."""
-    start_date = day.strftime("%Y-%m-%d")
-    end_date = day.strftime("%Y-%m-%d")
+def build_url(lat: float, lon: float, start_date: date, end_date: date) -> str:
+    """Build Open-Meteo archive API URL for given date range and location (UTC)."""
     params = {
         "latitude": round(lat, 2),
         "longitude": round(lon, 2),
-        "start_date": start_date,
-        "end_date": end_date,
+        "start_date": start_date.strftime("%Y-%m-%d"),
+        "end_date": end_date.strftime("%Y-%m-%d"),
         "hourly": "temperature_2m,precipitation,snowfall,weathercode,windspeed_10m,cloudcover,relative_humidity_2m",
         "timezone": "UTC",
     }
@@ -89,7 +87,7 @@ def fetch_with_retry(url: str, retries: int = MAX_RETRIES):
 # Upsert Weather Rows
 # ========================
 def upsert_weather_cache(conn, lat: float, lon: float, weather_json: dict):
-    """Insert 24 rows of hourly weather into weather_cache."""
+    """Insert hourly weather into weather_cache."""
     if not weather_json or "hourly" not in weather_json:
         logger.warning("No hourly data in response")
         return 0
@@ -138,36 +136,41 @@ def upsert_weather_cache(conn, lat: float, lon: float, weather_json: dict):
 
 
 # ========================
-# Bulk: Find missing lat/lon/date
+# Bulk: Find missing lat/lon ranges
 # ========================
-def find_missing_triples(conn) -> List[Tuple[float, float, date]]:
+def find_missing_ranges(conn) -> List[Tuple[float, float, date, date]]:
     """
-    Return distinct (lat, lon, day_utc) triples from raw_incidents that
-    do not yet exist in weather_cache.
-    
-    Skips invalid coordinates (0,0).
+    Return distinct (lat, lon, start_date, end_date) for coordinates
+    with missing weather data.
     """
     with conn.cursor() as cur:
-        cur.execute(
-            """
-            SELECT DISTINCT
-                ROUND(lat::numeric, 2) AS lat_r,
-                ROUND(lon::numeric, 2) AS lon_r,
-                DATE(occ_date_utc) AS day_utc
-            FROM raw_incidents ri
-            WHERE lat IS NOT NULL AND lon IS NOT NULL
-              AND NOT (lat = 0 AND lon = 0)  -- skip invalid 0,0 coords
-              AND NOT EXISTS (
-                  SELECT 1
-                  FROM weather_cache wc
-                  WHERE wc.lat = ROUND(ri.lat::numeric, 2)
-                    AND wc.lon = ROUND(ri.lon::numeric, 2)
-                    AND DATE(wc.hour_utc) = DATE(ri.occ_date_utc)
-              )
-            ORDER BY day_utc
-            """
-        )
-        return cur.fetchall()  # List[Tuple[float, float, date]]
+        cur.execute("""
+            WITH coord_dates AS (
+                SELECT
+                    ROUND(lat::numeric, 2) AS lat_r,
+                    ROUND(lon::numeric, 2) AS lon_r,
+                    DATE(occ_date_utc) AS day_utc
+                FROM raw_incidents
+                WHERE lat IS NOT NULL AND lon IS NOT NULL
+                  AND NOT (lat = 0 AND lon = 0)
+            ),
+            missing_dates AS (
+                SELECT cd.lat_r, cd.lon_r, cd.day_utc
+                FROM coord_dates cd
+                LEFT JOIN weather_cache wc
+                  ON wc.lat = cd.lat_r
+                 AND wc.lon = cd.lon_r
+                 AND DATE(wc.hour_utc) = cd.day_utc
+                WHERE wc.hour_utc IS NULL
+            )
+            SELECT lat_r, lon_r,
+                   MIN(day_utc) AS start_date,
+                   MAX(day_utc) AS end_date
+            FROM missing_dates
+            GROUP BY lat_r, lon_r
+            ORDER BY lat_r, lon_r
+        """)
+        return cur.fetchall()  # List[Tuple[lat, lon, start_date, end_date]]
 
 
 # ========================
@@ -186,27 +189,30 @@ def main():
 
     try:
         if args.lat is not None and args.lon is not None and args.date is not None:
-            targets = [(round(args.lat, 2), round(args.lon, 2), datetime.strptime(args.date, "%Y-%m-%d").date())]
+            # Force mode: single day
+            targets = [(round(args.lat, 2), round(args.lon, 2),
+                        datetime.strptime(args.date, "%Y-%m-%d").date(),
+                        datetime.strptime(args.date, "%Y-%m-%d").date())]
         else:
-            targets = find_missing_triples(conn)
+            # Bulk mode: fetch missing ranges
+            targets = find_missing_ranges(conn)
 
-        # Log info about what we are about to process
         if not targets:
-            logger.info("No missing weather triples found. Nothing to fetch.")
+            logger.info("No missing weather data found. Nothing to fetch.")
         else:
-            logger.info(f"Found {len(targets)} missing weather triples to fetch.")
+            logger.info(f"Found {len(targets)} coordinates to fetch weather for.")
 
-        # Process each target triple
         total_rows = 0
-        for lat, lon, day_utc in targets:
-            logger.info(f"Fetching weather {day_utc} at ({lat}, {lon})")
-            url = build_url(lat, lon, day_utc)
+        for lat, lon, start_date, end_date in targets:
+            logger.info(f"Fetching weather for ({lat}, {lon}) from {start_date} to {end_date}")
+            url = build_url(lat, lon, start_date, end_date)
             data = fetch_with_retry(url)
             if data:
                 rows = upsert_weather_cache(conn, lat, lon, data)
                 total_rows += rows
+                conn.commit()
+                logger.info(f"Committed {rows} rows for ({lat}, {lon})")
             time.sleep(SLEEP_BETWEEN_CALLS)
-        conn.commit()
 
         log_run_end(conn, run_id, "success", row_count=total_rows)
 
