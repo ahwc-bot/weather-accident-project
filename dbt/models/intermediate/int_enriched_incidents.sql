@@ -42,7 +42,10 @@ prep as (
 
         -- Derived fields
         date_trunc('day', occ_date) as occ_date_day,
-        extract(isodow from occ_date) in (6,7) as is_weekend,
+        case 
+            when extract(isodow from occ_date) in (6,7) then true 
+            else false 
+        end as is_weekend,
         case
             when extract(month from occ_date) in (12,1,2) then 'Winter'
             when extract(month from occ_date) in (3,4,5) then 'Spring'
