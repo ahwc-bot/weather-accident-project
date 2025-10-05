@@ -1,0 +1,99 @@
+version: 2
+
+models:
+  - name: fct_incidents_flat
+    description: >
+      Flat fact table of Toronto Police Service collision incidents,
+      enriched with weather data and derived attributes. Designed for
+      BI consumption (e.g., Tableau Public) with one row per incident.
+    columns:
+      # Identifier
+      - name: event_id
+        description: "Primary key from TPS (GO-xxxx)."
+        tests:
+          - not_null
+          - unique
+
+      # Temporal
+      - name: occ_date_utc
+        description: "UTC timestamp of collision occurrence."
+      - name: occ_date_day
+        description: "Date part of occ_date_utc (YYYY-MM-DD)."
+      - name: occ_year
+        description: "Year of occurrence."
+      - name: occ_month
+        description: "Month of occurrence."
+      - name: day_of_week
+        description: "Day of week of occurrence (1=Monday..7=Sunday)."
+      - name: hour_of_day
+        description: "Hour of collision occurrence (0-23)."
+      - name: is_weekend
+        description: "Flag indicating if collision occurred on Saturday or Sunday."
+      - name: season
+        description: "Season of the year (Winter, Spring, Summer, Fall)."
+      - name: daypart
+        description: "Time-of-day bucket: Night (0-5), Morning (6-11), Afternoon (12-17), Evening (18-23)."
+
+      # Location
+      - name: division
+        description: "TPS Division code."
+      - name: tps_hood_code
+        description: "TPS hood identifier."
+      - name: neighbourhood_158
+        description: "Neighbourhood name."
+      - name: lat
+        description: "Latitude of collision."
+      - name: lon
+        description: "Longitude of collision."
+      - name: invalid_coord_flag
+        description: "Flag indicating whether coordinates are within valid Toronto bounds."
+
+      # Collision severity & outcomes
+      - name: collision_severity
+        description: "Collision severity hierarchy: Fatality > Injury > Fail to Remain > Property Damage > Unknown."
+      - name: collision_severity_rank
+        description: >
+          Numeric rank for collision severity (1=Fatality, 2=Injury, 3=Fail to Remain, 4=Property Damage, 5=Unknown).
+      - name: fatalities
+        description: "Number of persons killed."
+      - name: injury_collisions
+        description: "Collision involved injuries (boolean)."
+      - name: ftr_collisions
+        description: "Collision involved Fail to Remain (boolean)."
+      - name: pd_collisions
+        description: "Collision involved Property Damage (boolean)."
+
+      # Parties involved
+      - name: automobile
+        description: "Collision involved a person in an automobile (boolean)."
+      - name: motorcycle
+        description: "Collision involved a motorcyclist (boolean)."
+      - name: passenger
+        description: "Collision involved a passenger (boolean)."
+      - name: bicycle
+        description: "Collision involved a cyclist (boolean)."
+      - name: pedestrian
+        description: "Collision involved a pedestrian (boolean)."
+
+      # Weather
+      - name: temperature
+        description: "Air temperature (°C) at the collision hour and location."
+      - name: precipitation
+        description: "Precipitation (mm) at the collision hour and location."
+      - name: snowfall
+        description: "Snowfall (cm) at the collision hour and location."
+      - name: weathercode
+        description: "Raw Open-Meteo weather code at the collision hour and location."
+      - name: weather_condition
+        description: >
+          Bucketed weather condition derived from weathercode (Clear, Cloudy, Fog, Rain/Drizzle, Rain, Snow, Rain showers, Thunderstorm, Other).
+      - name: windspeed
+        description: "Wind speed (km/h) at the collision hour and location."
+      - name: cloudcover
+        description: "Cloud cover (%) at the collision hour and location."
+      - name: humidity
+        description: "Relative humidity (%) at the collision hour and location."
+
+      # Audit
+      - name: inserted_at
+        description: "Timestamp when the record was inserted into the database."
