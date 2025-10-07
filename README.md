@@ -1,6 +1,19 @@
-# Traffic & Weather Incidents Analytics Project
+# 🚦 Traffic Incidents & Weather Analytics Project
 
-This project demonstrates a complete end-to-end data pipeline and analytics dashboard for traffic and weather incident data. It showcases data engineering, analytics, and visualization skills using real-world datasets.
+This project simulates a real-world BI workflow by integrating traffic collision data from Toronto Police Services and weather data from Open-Meteo. It demonstrates my ability to build a reproducible, end-to-end data pipeline — covering ingestion, transformation, validation, and visualization — using modern data engineering tools.
+
+🔍 **Key Skills Demonstrated**:
+- API integration and data ingestion with Python
+- dbt modeling with staging, intermediate, and mart layers
+- Automated data validation and pipeline monitoring with Pytest and logging
+- Project structure aligned with gold-layer principles in lakehouse architecture
+
+👤 **Role**: Sole developer and architect — responsible for all ingestion, modeling, testing, and dashboard design.
+
+🧱 **Next Steps**:
+- Finalize mart layer and dimensional models
+- Build interactive dashboards in Tableau Public and Power BI (in development)
+- Explore paginated reports and Direct Lake mode in Microsoft Fabric
 
 ---
 
@@ -21,9 +34,9 @@ This project demonstrates a complete end-to-end data pipeline and analytics dash
 - Open-Meteo (OM) weather API  
 
 ### **4. Visualizations**
-- **Tableau Public Dashboard:**  
-  A polished, interactive dashboard showing traffic and weather incidents with KPIs and filters.  
-  - Highlights trends, severity, and conditions.  
+- **Tableau Public Dashboard (in development):**  
+  An interactive dashboard showing traffic and weather incidents with KPIs and filters.  
+  - Will highlight trends, severity, and conditions.  
   - Demonstrates end-to-end pipeline from raw data to visualization.
 
 ### **5. Testing & Utilities**
@@ -64,7 +77,10 @@ This project is intentionally open to the public in its current phase to showcas
 2. Follow the SQL scripts in `models/` to build the mart layer.  
 3. Run `scripts/export_for_tableau.py` to prepare data for Tableau.  
 
-> **Note:** This repository is intended for demo purposes. Running the full pipeline requires setting up PostgreSQL, dbt, Python dependencies, and API access. The steps above are sufficient to explore the dashboard and understand the data workflow.
+> **Note:** This repository is intended for demo purposes. Running the full pipeline requires setting up PostgreSQL, dbt, Python dependencies, and API access.  
+>  
+> For recruiters or hiring managers: feel free to explore the models, scripts, and structure to understand the pipeline design and engineering approach.
+
 
 ---
 
