@@ -27,6 +27,10 @@ def export_for_tableau(output_path: str, triggered_by: str = "manual"):
     run_id = log_run_start(conn, "export_for_tableau", triggered_by)
 
     try:
+        logger.info("Setting session time zone to UTC...")
+        with conn.cursor() as cur:
+            cur.execute("SET TIME ZONE 'UTC';")
+
         logger.info("Querying fct_incidents_flat...")
         query = "SELECT * FROM dbt.fct_incidents_flat;"
         df = pd.read_sql_query(query, conn)

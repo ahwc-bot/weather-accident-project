@@ -18,7 +18,7 @@ typed as (
 
         -- Dates and times (OCC_DATE in ms since epoch; hour in separate field)
         ((raw -> 'attributes' ->> 'OCC_DATE')::bigint / 1000)                              as occ_date_epoch,
-        to_timestamp((raw -> 'attributes' ->> 'OCC_DATE')::bigint / 1000)                  as occ_date,            -- raw anchor; time unreliable
+        to_timestamp((raw -> 'attributes' ->> 'OCC_DATE')::bigint / 1000) AT TIME ZONE 'UTC' as occ_date,            -- raw anchor; time unreliable
         raw -> 'attributes' ->> 'OCC_MONTH'                                               as occ_month,           -- e.g., "March"
         raw -> 'attributes' ->> 'OCC_DOW'                                                 as occ_dow,             -- e.g., "Friday"
         (raw -> 'attributes' ->> 'OCC_YEAR')::int                                         as occ_year,
